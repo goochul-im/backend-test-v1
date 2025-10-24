@@ -9,5 +9,6 @@ enum class ErrorCode(
 ) {
 
     ENCRYPTION_ERROR("E001", "Encrypt Error"),
+    PG_CLIENT_EXCEPTION("E002", "PG Client Exception"),
 
 }
