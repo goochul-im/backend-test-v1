@@ -1,7 +1,7 @@
 package im.bigs.pg.api.exception
 
+import im.bigs.pg.common.exception.ErrorCode
 import org.springframework.validation.BindingResult
-import kotlin.code
 
 class ErrorResponse(
     errorCode: ErrorCode,
