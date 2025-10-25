@@ -1,9 +1,17 @@
 package im.bigs.pg.application.payment.service
 
 import im.bigs.pg.application.payment.port.`in`.*
+import im.bigs.pg.application.payment.port.out.PaymentOutPort
+import im.bigs.pg.application.payment.port.out.PaymentPage
+import im.bigs.pg.application.payment.port.out.PaymentQuery
+import im.bigs.pg.application.payment.port.out.PaymentSummaryFilter
+import im.bigs.pg.application.payment.port.out.PaymentSummaryProjection
+import im.bigs.pg.domain.payment.PaymentStatus
 import im.bigs.pg.domain.payment.PaymentSummary
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.Base64
 
 /**
@@ -12,7 +20,9 @@ import java.util.Base64
  * - 통계는 조회 조건과 동일한 집합을 대상으로 계산됩니다.
  */
 @Service
-class QueryPaymentsService : QueryPaymentsUseCase {
+class QueryPaymentsService(
+    val paymentRepository: PaymentOutPort,
+) : QueryPaymentsUseCase {
     /**
      * 필터를 기반으로 결제 내역을 조회합니다.
      *
@@ -23,11 +33,40 @@ class QueryPaymentsService : QueryPaymentsUseCase {
      * @return 조회 결과(목록/통계/커서)
      */
     override fun query(filter: QueryFilter): QueryResult {
+
+        val (cursorCreatedAt, cursorId) = decodeCursor(filter.cursor)
+
+        val list : PaymentPage = paymentRepository.findBy(
+            PaymentQuery(
+                partnerId = filter.partnerId,
+                status = filter.status?.let { PaymentStatus.valueOf(it) },
+                from = filter.from,
+                to = filter.to,
+                limit = filter.limit,
+                cursorCreatedAt = cursorCreatedAt?.let { LocalDateTime.ofInstant(it, ZoneOffset.UTC) },
+                cursorId = cursorId
+            )
+        )
+        val summary : PaymentSummaryProjection = paymentRepository.summary(
+            PaymentSummaryFilter(
+                partnerId = filter.partnerId,
+                status = filter.status?.let { PaymentStatus.valueOf(it) },
+                from = filter.from,
+                to = filter.to,
+            )
+        )
+
+        val nextCursor = encodeCursor(list.nextCursorCreatedAt?.toInstant(ZoneOffset.UTC), list.nextCursorId)
+
         return QueryResult(
-            items = emptyList(),
-            summary = PaymentSummary(count = 0, totalAmount = java.math.BigDecimal.ZERO, totalNetAmount = java.math.BigDecimal.ZERO),
-            nextCursor = null,
-            hasNext = false,
+            items = list.items,
+            summary = PaymentSummary(
+                count = summary.count,
+                totalAmount = summary.totalAmount,
+                totalNetAmount = summary.totalNetAmount,
+            ),
+            nextCursor = nextCursor,
+            hasNext = list.hasNext,
         )
     }
 
