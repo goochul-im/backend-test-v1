@@ -8,9 +8,11 @@ import im.bigs.pg.application.payment.port.out.PaymentOutPort
 import im.bigs.pg.application.pg.port.out.PgApproveRequest
 import im.bigs.pg.application.pg.port.out.PgClientOutPort
 import im.bigs.pg.domain.calculation.FeeCalculator
+import im.bigs.pg.domain.partner.FeePolicy
 import im.bigs.pg.domain.payment.Payment
 import im.bigs.pg.domain.payment.PaymentStatus
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 
 /**
  * 결제 생성 유스케이스 구현체.
@@ -37,6 +39,9 @@ class PaymentService(
         val pgClient = pgClients.firstOrNull { it.supports(partner.id) }
             ?: throw IllegalStateException("No PG client for partner ${partner.id}")
 
+        val feePolicy : FeePolicy = feePolicyRepository.findEffectivePolicy(partner.id)
+            ?: throw IllegalStateException("No FeePolicy for partner ${partner.id}")
+
         val approve = pgClient.approve(
             PgApproveRequest(
                 partnerId = partner.id,
@@ -46,13 +51,13 @@ class PaymentService(
                 productName = command.productName,
             ),
         )
-        val hardcodedRate = java.math.BigDecimal("0.0300")
-        val hardcodedFixed = java.math.BigDecimal("100")
-        val (fee, net) = FeeCalculator.calculateFee(command.amount, hardcodedRate, hardcodedFixed)
+        val rete = feePolicy.percentage
+        val fixed = feePolicy.fixedFee
+        val (fee, net) = FeeCalculator.calculateFee(command.amount, rete, fixed)
         val payment = Payment(
             partnerId = partner.id,
             amount = command.amount,
-            appliedFeeRate = hardcodedRate,
+            appliedFeeRate = rete,
             feeAmount = fee,
             netAmount = net,
             cardBin = command.cardBin,
