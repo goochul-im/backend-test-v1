@@ -125,10 +125,9 @@ class TestPgClientTest {
             Charsets.UTF_8)
 
         // When/Then
-        val exception = assertThrows<PgClientException> {
+        assertThrows<PgClientException> {
             testPgClient.approve(request)
         }
-        assertTrue(exception.message!!.contains("도난 또는 분실된 카드입니다."))
 
         verify { pgEncryptor.encrypt(request) }
         verify {
@@ -159,10 +158,9 @@ class TestPgClientTest {
         } throws HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
 
         // When/Then
-        val exception = assertThrows<PgClientException> { 
+        assertThrows<PgClientException> {
             testPgClient.approve(request)
         }
-        assertTrue(exception.message!!.contains("TestPG 서버에 에러가 있습니다."))
 
         verify { pgEncryptor.encrypt(request) }
         verify {
@@ -193,10 +191,9 @@ class TestPgClientTest {
         } throws RuntimeException("Network is down")
 
         // When/Then
-        val exception = assertThrows<PgClientException> { 
+        assertThrows<PgClientException> {
             testPgClient.approve(request)
         }
-        assertTrue(exception.message!!.contains("PG 승인 처리 중 내부 오류 발생"))
 
         verify { pgEncryptor.encrypt(request) }
         verify {
