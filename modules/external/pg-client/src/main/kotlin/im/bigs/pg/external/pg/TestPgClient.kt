@@ -33,9 +33,10 @@ class TestPgClient(
 ) : PgClientOutPort {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val prefixMessage = "[TestPG Client]"
 
     override fun supports(partnerId: Long): Boolean {
-        TODO("Not yet implemented")
+        return partnerId == 2L
     }
 
     override fun approve(request: PgApproveRequest): PgApproveResult {
@@ -58,7 +59,7 @@ class TestPgClient(
 
             val responseBody = response.body ?: run {
                 log.error("TestPg 2xx OK 응답을 받았으나, body가 null입니다.")
-                throw PgClientException("TestPG 응답 데이터가 비어있습니다.")
+                throw PgClientException(addPrefixMessageToException("응답 데이터가 비어있습니다."))
             }
 
             return PgApproveResult(
@@ -69,25 +70,25 @@ class TestPgClient(
         } catch (e: HttpClientErrorException) {
             // e.statusCode (e.g., 422, 401)
             // e.responseBodyAsString (오류 JSON 문자열)
-            log.error("TestPg사와의 통신이 실패하였습니다!! (4xx) message = ${e.message}")
+            log.error("$prefixMessage TestPg사와의 통신이 실패하였습니다!! (4xx) message = ${e.message}")
             val errorResponse = objectMapper.readValue(e.responseBodyAsString, TestPgFailureResponse::class.java)
             when (e.statusCode.value()) {
-                422 -> throw PgClientException(get422ExceptionMessage(errorResponse))
-                401 -> throw PgClientException("요청 형식에 문제가 있습니다. message = ${e.message}")
-                else -> throw PgClientException("알수 없는 에러. message = ${e.message}")
+                422 -> throw PgClientException(addPrefixMessageToException(get422ExceptionMessage(errorResponse)))
+                401 -> throw PgClientException(addPrefixMessageToException("요청 형식에 문제가 있습니다. message = ${e.message}"))
+                else -> throw PgClientException(addPrefixMessageToException("알수 없는 에러. message = ${e.message}"))
             }
 
         } catch (e: HttpServerErrorException) {
             // [5xx 오류 처리]
             log.error("TestPg 서버에 문제가 있습니다!! (5xx) message = ${e.message}")
-            throw PgClientException("TestPG 서버에 에러가 있습니다. message = ${e.message}")
+            throw PgClientException(addPrefixMessageToException("서버에 에러가 있습니다. message = ${e.message}"))
         } catch (e: Exception) {
             log.error("PG 승인 처리 중 알 수 없는 예외가 발생하였습니다.", e)
-            throw PgClientException("PG 승인 처리 중 내부 오류 발생: ${e.message}")
+            throw PgClientException(addPrefixMessageToException("PG 승인 처리 중 내부 오류 발생: ${e.message}"))
         }
     }
 
-    private fun get422ExceptionMessage(response: TestPgFailureResponse) : String {
+    private fun get422ExceptionMessage(response: TestPgFailureResponse): String {
         var message = ""
         when (response.code) {
             1001 -> message = "도난 또는 분실된 카드입니다."
@@ -97,6 +98,10 @@ class TestPgClient(
             1005 -> message = "위조 또는 변조된 카드입니다.(허용되지 않은 카드)"
         }
         return message
+    }
+
+    private fun addPrefixMessageToException(message: String): String {
+        return "$prefixMessage $message"
     }
 
 }
