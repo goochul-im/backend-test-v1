@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 
 data class TestPgSuccessResponse(
     val approvalCode: String,
-    @get:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    @get:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSSSSSSSS]")
     val approvedAt: LocalDateTime,
     val maskedCardLast4: String,
     val amount: BigDecimal,

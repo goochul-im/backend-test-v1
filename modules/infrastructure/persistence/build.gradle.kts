@@ -1,3 +1,5 @@
+plugins { id("org.jetbrains.kotlin.plugin.jpa") }
+
 tasks.jar {
     enabled = true
 }

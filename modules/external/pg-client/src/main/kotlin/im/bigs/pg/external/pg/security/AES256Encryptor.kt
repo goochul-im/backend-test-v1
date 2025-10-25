@@ -1,9 +1,10 @@
 package im.bigs.pg.external.pg.security
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import im.bigs.pg.external.pg.exception.EncryptFailedException
 import im.bigs.pg.application.pg.port.out.PgApproveRequest
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.security.GeneralSecurityException
@@ -25,15 +26,30 @@ class AES256Encryptor(
 ) : PgEncryptor {
 
     private val TAG_LENGTH_BIT: Int = 128
-    private val mapper = ObjectMapper()
+    private val mapper = jacksonObjectMapper()
+    private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun encrypt(plainText: PgApproveRequest): String {
+    data class TestPgRequest(
+        val cardNumber: String,
+        val birthDate: String,
+        val expiry: String,
+        val password: String,
+        val amount: String
+    )
+
+    override fun encrypt(request: PgApproveRequest): String {
         try {
             val secretKey = apiKeyToSecretKey(API_KEY)
 
             val iv = decodeBase64Url(TEST_IV_BASE64URL) // IllegalArgumentException 가능
 
-            val plaintTextBytes = mapper.writeValueAsBytes(plainText) // JsonProcessingException
+            val plaintTextBytes = mapper.writeValueAsBytes(TestPgRequest(
+                cardNumber = "1111-1111-1111-1111",
+                birthDate = "19900101",
+                expiry = "1227",
+                password = "12",
+                amount = request.amount.toString()
+            )) // JsonProcessingException
 
             val gcmParameterSpec = GCMParameterSpec(TAG_LENGTH_BIT, iv)
 
@@ -70,5 +86,15 @@ class AES256Encryptor(
 
     private fun decodeBase64Url(value: String): ByteArray {
         return Base64.getUrlDecoder().decode(value)
+    }
+
+    private fun makeCardNumber(cardBin: String?, cardLast4: String?): String {
+        val prefix = if (cardBin == null) {
+            "1111-11"
+        } else {
+            "${cardBin.substring(0, 4)}-${cardBin.substring(4, 6)}"
+        }
+        val postfix = cardLast4 ?: "1111"
+        return "${prefix}11-1111-$postfix"
     }
 }
