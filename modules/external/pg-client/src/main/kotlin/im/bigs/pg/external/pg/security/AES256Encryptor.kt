@@ -88,13 +88,4 @@ class AES256Encryptor(
         return Base64.getUrlDecoder().decode(value)
     }
 
-    private fun makeCardNumber(cardBin: String?, cardLast4: String?): String {
-        val prefix = if (cardBin == null) {
-            "1111-11"
-        } else {
-            "${cardBin.substring(0, 4)}-${cardBin.substring(4, 6)}"
-        }
-        val postfix = cardLast4 ?: "1111"
-        return "${prefix}11-1111-$postfix"
-    }
 }
