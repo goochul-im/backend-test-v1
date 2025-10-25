@@ -14,6 +14,22 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 server:
   port: 8080
 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger
+
+pgclient:
+  test-pg:
+    url: "https://api-test-pg.bigs.im/api/v1/pay/credit-card"
+    api-key: "11111111-1111-4111-8111-111111111111"
+    algorithm: "AES/GCM/NoPadding"
+    iv-base64url: "AAAAAAAAAAAAAAAA"
