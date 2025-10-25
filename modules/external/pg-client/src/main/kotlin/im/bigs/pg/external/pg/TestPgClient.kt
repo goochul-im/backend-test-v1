@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestTemplate
+import java.math.BigDecimal
 import java.util.Collections
 
 @Component
@@ -41,7 +42,7 @@ class TestPgClient(
 
     override fun approve(request: PgApproveRequest): PgApproveResult {
 
-        val encValue = aes256Encryptor.encrypt(request)
+        val encValue = aes256Encryptor.encrypt(request.copy(amount = BigDecimal(request.amount.toInt())))
         val headers = HttpHeaders()
         headers.set("Content-Type", "application/json")
         headers.set("API-KEY", API_KEY)
