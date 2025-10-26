@@ -112,6 +112,7 @@ class PaymentController(
             QueryResponse(
                 items = res.items.map { PaymentResponse.from(it) },
                 summary = Summary(res.summary.count, res.summary.totalAmount, res.summary.totalNetAmount),
+                pageSummary = Summary(res.pageSummary.count, res.pageSummary.totalAmount, res.pageSummary.totalNetAmount),
                 nextCursor = res.nextCursor,
                 hasNext = res.hasNext,
             ),
