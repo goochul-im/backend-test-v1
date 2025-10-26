@@ -11,6 +11,7 @@ import im.bigs.pg.domain.payment.PaymentSummary
 data class QueryResult(
     val items: List<Payment>,
     val summary: PaymentSummary,
+    val pageSummary: PaymentSummary,
     val nextCursor: String?,
     val hasNext: Boolean,
 )

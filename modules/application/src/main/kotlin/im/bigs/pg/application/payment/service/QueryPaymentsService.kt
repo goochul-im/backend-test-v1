@@ -65,8 +65,21 @@ class QueryPaymentsService(
                 totalAmount = summary.totalAmount,
                 totalNetAmount = summary.totalNetAmount,
             ),
+            pageSummary = getCursorSummary(list),
             nextCursor = nextCursor,
             hasNext = list.hasNext,
+        )
+    }
+
+    /**
+     * 현재 페이지의 요약 정보를 반환합니다.
+     */
+    private fun getCursorSummary(page: PaymentPage) : PaymentSummary{
+        val items = page.items
+        return PaymentSummary(
+            count = items.size.toLong(),
+            totalAmount = items.sumOf { it.amount },
+            totalNetAmount = items.sumOf { it.netAmount },
         )
     }
 
