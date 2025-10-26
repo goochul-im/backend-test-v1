@@ -1,5 +1,6 @@
 package im.bigs.pg.api.exception
 
+import im.bigs.pg.application.exception.PaymentException
 import im.bigs.pg.common.exception.ErrorCode
 import im.bigs.pg.external.pg.exception.EncryptFailedException
 import im.bigs.pg.external.pg.exception.PgClientException
@@ -60,20 +61,32 @@ class ExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleMethodArgumentNotValidException(e: IllegalArgumentException): ResponseEntity<ErrorResponse> {
-        log.error ( "IllegalArgumentException: $e" )
+        log.error("IllegalArgumentException: $e")
 
-        val of = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND)
+        val of = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND, e.message)
 
-        return ResponseEntity(of, HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity(of, HttpStatus.BAD_REQUEST)
     }
 
     @ExceptionHandler(IllegalStateException::class)
     fun handleMethodArgumentNotValidException(e: IllegalStateException): ResponseEntity<ErrorResponse> {
-        log.error ( "IllegalStateException: $e" )
+        log.error("IllegalStateException: $e")
 
-        val of = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND)
+        val of = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND, e.message)
 
-        return ResponseEntity(of, HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity(of, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(PaymentException::class)
+    fun handlePaymentException(e: PaymentException): ResponseEntity<ErrorResponse> {
+        log.error("PaymentException: $e")
+
+        val of = ErrorResponse.of(ErrorCode.PAYMENT_EXCEPTION, e.message)
+
+        return ResponseEntity(
+            of,
+            HttpStatus.BAD_REQUEST
+        )
     }
 
 }

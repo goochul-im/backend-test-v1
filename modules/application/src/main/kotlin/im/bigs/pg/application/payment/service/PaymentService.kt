@@ -1,5 +1,6 @@
 package im.bigs.pg.application.payment.service
 
+import im.bigs.pg.application.exception.PaymentException
 import im.bigs.pg.application.partner.port.out.FeePolicyOutPort
 import im.bigs.pg.application.partner.port.out.PartnerOutPort
 import im.bigs.pg.application.payment.port.`in`.PaymentUseCase
@@ -12,7 +13,6 @@ import im.bigs.pg.domain.partner.FeePolicy
 import im.bigs.pg.domain.payment.Payment
 import im.bigs.pg.domain.payment.PaymentStatus
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 
 /**
  * 결제 생성 유스케이스 구현체.
@@ -33,14 +33,14 @@ class PaymentService(
      */
     override fun pay(command: PaymentCommand): Payment {
         val partner = partnerRepository.findById(command.partnerId)
-            ?: throw IllegalArgumentException("Partner not found: ${command.partnerId}")
+            ?: throw PaymentException("Partner not found: ${command.partnerId}")
         require(partner.active) { "Partner is inactive: ${partner.id}" }
 
         val pgClient = pgClients.firstOrNull { it.supports(partner.id) }
-            ?: throw IllegalStateException("No PG client for partner ${partner.id}")
+            ?: throw PaymentException("No PG client for partner ${partner.id}")
 
         val feePolicy : FeePolicy = feePolicyRepository.findEffectivePolicy(partner.id)
-            ?: throw IllegalStateException("No FeePolicy for partner ${partner.id}")
+            ?: throw PaymentException("No FeePolicy for partner ${partner.id}")
 
         val approve = pgClient.approve(
             PgApproveRequest(

@@ -5,21 +5,22 @@ import org.springframework.validation.BindingResult
 
 class ErrorResponse(
     errorCode: ErrorCode,
+    message: String? = null,
     var errors: List<FieldError> = ArrayList()
 ) {
 
-    var code:String = errorCode.code
+    var code: String = errorCode.code
         private set
 
-    var message:String = errorCode.message
+    var message: String = message ?: errorCode.message
         private set
 
     class FieldError private constructor(
-        val filed:String,
-        val value:String,
-        val reason:String?
-    ){
-        companion object{
+        val filed: String,
+        val value: String,
+        val reason: String?
+    ) {
+        companion object {
 
             fun of(bindingResult: BindingResult): List<FieldError> {
                 val fieldErrors = bindingResult.fieldErrors
@@ -51,5 +52,11 @@ class ErrorResponse(
             )
         }
 
+        fun of(code: ErrorCode, message: String?): ErrorResponse {
+            return ErrorResponse(
+                errorCode = code,
+                message = message
+            )
+        }
     }
 }
